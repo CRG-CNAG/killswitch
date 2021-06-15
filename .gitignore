@@ -131,3 +131,4 @@ dmypy.json
 # Sequencing files
 *.vcf
 *.vcf.ann
+*.xlsx

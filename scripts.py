@@ -171,7 +171,7 @@ def map_cassettes():
     return {5:pos_cas1, 20:pos_cas2}
 
 maps = map_cassettes()
-
+gold_hash = {k:v for k, v in zip(list(gold['gene']), list(gold['class']))}
 
 def process_effect(effect, position, genome=5):
     eff = str(effect).split(',')
@@ -185,9 +185,8 @@ def process_effect(effect, position, genome=5):
                 ann = 'intergenic'
                 mut = string[-7]
             else:
-                comptyp = gold.get(gene, None)
-                if comptyp:
-                    if comptyp=='E':
+                if gene in gold_hash:
+                    if gold_hash[gene]=='E':
                         ann = 'essential'
                     else:
                         ann = 'non-essential'
