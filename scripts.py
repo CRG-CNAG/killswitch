@@ -13,11 +13,15 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation
 # General info about the genome references and the location of the cassettes in the genomes
 seq_record5 = SeqIO.read('./data/C5_refSeq.gb', "genbank")
 seq_record20 = SeqIO.read('./data/C20_refSeq.gb', "genbank")
+seq_record26 = SeqIO.read('./data/C26_refSeq.gb', "genbank")
+
 genome_C5 = str(seq_record5.seq)
-genome_C20 = str(seq_record5.seq)
+genome_C20 = str(seq_record20.seq)
+genome_C26 = str(seq_record26.seq)
 
 cass_par = [565510, 572124] # Present in C5 and C20
 cass_3b = [780850, 787445]  # Only in C20
+cass_26 = [574473, 581077]
 
 # Annotation information to work faster with dataframes
 ncbi = pd.read_csv('./data/mpn_annotation.csv', sep='\t', header=None) # Genome annotation
@@ -38,6 +42,7 @@ posN = set(posN)
 posE = set(posE)
 cas1 = set(range(cass_par[0], cass_par[1]+1))
 cas2 = set(range(cass_3b[0], cass_3b[1]+1))
+cas3 = set(range(cass_26[0], cass_26[1]+1))
 cas12 = cas1.union(cas2)
 geno = set(range(1, 816395)).difference(cas1.union(cas2))
 
@@ -130,8 +135,10 @@ def correspondance(genome, positions):
     c = 0
     if genome==5:
         seq_record = seq_record5
-    else:
+    elif genome==20:
         seq_record = seq_record20
+    else:
+        seq_record = seq_record26
     for i in seq_record.features:
         if i.location.start in positions and i.type not in ['Polymorphism', 'misc_feature', 'Site', 'repeat_region', 'gene']:
             d[c] = i
@@ -168,7 +175,18 @@ def map_cassettes():
                 pos_cas2[i]+= ' | '+name
             else:
                 pos_cas2[i] = name
-    return {5:pos_cas1, 20:pos_cas2}
+    pos_cas3 = {i:'intergenic_cassette' for i in cas3}
+    for v in correspondance(26, positions=cas3).values():
+        if v.type!='CDS':
+            name = 'regulator '+v.qualifiers['label'][0]
+        else:
+            name = v.qualifiers['label'][0]
+        for i in range(int(v.location.start), int(v.location.end)+1):
+            if pos_cas3[i][0]!='i':
+                pos_cas3[i]+= ' | '+name
+            else:
+                pos_cas3[i] = name
+    return {5:pos_cas1, 20:pos_cas2, 26:pos_cas3}
 
 maps = map_cassettes()
 gold_hash = {k:v for k, v in zip(list(gold['gene']), list(gold['class']))}
